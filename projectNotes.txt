@@ -1,0 +1,31 @@
+On the average (negroes/blacks/African-Americans) have worse jobs, income, and housing than white people. Do you think these differences are: 
+a. (RACDIF1) Mainly due to discrimination?
+b. (RACDIF2) Because most (negroes/blacks/African-Americans) have less in-born ability to learn?
+c. (RACDIF3) Because most (negroes/blacks/African-Americans) don't have the chance for education that it takes to rise out of poverty?
+d. (RACDIF4) Because most (negroes/blacks/African-Americans) just don't have the motivation or willpower to pull themselves up out of poverty?
+
+
+
+
+"The Washington Post will uppercase the B in Black to identify the many groups that make up the African diaspora in America and elsewhere.... The use of [capitalized] Black is a recognition and acknowledgment not only of the cultural bonds and historical experiences shared by people of African heritage, but also the shared struggles of the descendants of enslaved people, families who immigrated generations ago and more recent immigrants from Africa, the Caribbean and other corners of the world.  This style change also prompts the question of how America’s largest racial community should be identified. Stories involving race show that White also represents a distinct cultural identity in the United States...  As such, White should be represented with a capital W."
+
+
+Our null hypothesis is Whites and Blacks are equally racist: $H_0: \mu_{racist-w} = \mu_{racist-b}$; 
+Our alternative hypothesis is that Whites are more racist than Blacks: $H_A: \mu_{racist-w} \gt \mu_{racist-b}$ 
+
+We are 95% confident that the *difference* between Blacks and Whites considering poorer educational opportunities to be a factor in Blacks' having worse jobs, income, and housing than White people is 10.72% +/- 1.93%. 
+
+ * Our null hypothesis is Whites and Blacks are equally racist: $H_0: \mu_{racistW} = \mu_{racistB}$
+ * Our alternative hypothesis is that Whites are more racist than Blacks: $H_A: \mu_{racistW} \gt \mu_{racistB}$ 
+ 
+  * Our null hypothesis is Whites and Blacks perceive discrimination equally: $H_0: p_{rd1W} = p_{rd1B}$
+ * Our alternative hypothesis is that Blacks perceive discrimination impacting their economic opportunities to a greater extent than Whites: $H_A: p_{rd1B} \gt p_{rd1W}$ 
+ 
+ The question about educational opportunities is coded as racdif3 in the survey, I used rd3.
+ 
+ In each of our tests below, we meet the conditions for the sampling distribution of $\hat{p}_1 - \hat{p}_2$ to be normal:
+
+* each proportion separately follows a normal model:
+  * The observations are independent and consist of less than 10% of the US population of Whites and Blacks
+  * The success-failure conditions of more than 10 successes and more than 10 failures are met
+* the two samples are independent of each other.

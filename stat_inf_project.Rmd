@@ -1,0 +1,458 @@
+---
+title: "Statistical inference with the GSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `gss`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("gss.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+<!-- (3 points) Describe how the observations in the sample are collected, and the implications of this data collection method on the scope of inference (generalizability / causality). Note that you might will need to look into documentation on the GSS to answer this question. See http://gss.norc.org/ as well as the "More information on the data" section below. -->
+ 
+The data used in this project is an extract from the raw data compiled by the General Social Surveys (GSS), a project funded by the National Science Foundation.  
+
+> Since 1972, the General Social Survey (GSS) has been monitoring societal change and studying the growing complexity of American society. The GSS aims to gather data on contemporary American society in order to monitor and explain trends and constants in attitudes, behaviors, and attributes; to examine the structure and functioning of society in general as well as the role played by relevant subgroups; to compare the United States to other societies in order to place American society in comparative perspective and develop cross-national models of human society; and to make high-quality data easily accessible to scholars, students, policy makers, and others, with minimal cost and waiting.  GSS questions cover a diverse range of issues including national spending priorities, marijuana use, crime and punishment, race relations, quality of life, confidence in institutions, and sexual behavior. 
+
+The project's [website](http://gss.norc.org/) states:
+
+> The General Social Surveys (GSS) were designed as part of a data diffusion project in 1972. The GSS replicated questionnaire items and wording in order to facilitate time-trend studies. The latest survey, GSS 2012, includes a cumulative file that merges all 29 General Social Surveys into a single file containing data from 1972 to 2012. The items appearing in the surveys are one of three types: Permanent questions that occur on each survey, rotating questions that appear on two out of every three surveys (1973, 1974, and 1976, or 1973, 1975, and 1976), and a few occasional questions such as split ballot experiments that occur in a single survey. The 2012 surveys included seven topic modules: Jewish identity, generosity, workplace violence, science, skin tone, and modules for experimental and miscellaneous questions. The International Social Survey Program (ISSP) module included in the 2012 survey was gender. The data also contain several variables describing the demographic characteristics of the respondents.
+
+The extract was created "with the goal of providing a convenient data resource for students learning statistical reasoning using the R language. Unlike the full General Social Survey Cumulative File, [the preparers] have removed missing values from the responses and created factor variables when appropriate to facilitate analysis using R."
+
+The data used is drawn from "General Social Surveys conducted during February, March, and April of 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1980, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1993, 1994, 1996, 1998, 2000, 2002, 2004, 2006, 2008, 2010, and 2012.... There are a total of 57,061 completed interviews.  Each survey from 1972 to 2004 was an independently drawn sample of English-speaking persons 18 years of age or over, living in non-institutional arrangements within the United States."
+
+The data used in this project is available at [gss.Rdata](https://d18ky98rnyall9.cloudfront.net/_5db435f06000e694f6050a2d43fc7be3_gss.Rdata?Expires=1605312000&Signature=K-A67PSMtOjVvJ8n7~yZh~8APL2VpGY4XSD3EeWDCD1guYDZT2SkAh8xRfVIaTaJ9qgvWURXp8Mu1uNYSNKc7a6oCx48qqWRauaGSz8sMEkyaPLwNZX9Om9cbO~tfvkUw37kCNJDKJnKjx4uY8-klUWj1SYob3pBDbl9CsDIYx8_&Key-Pair-Id=APKAJLTNE6QMUY6HBC5A)
+
+The document describing this data is available at [gss.html](https://d18ky98rnyall9.cloudfront.net/_8abbe344133a7a8c98cfabe01a5075c2_gss.html?Expires=1605312000&Signature=fLAHEaPNAckEVklCFv4cLX4Aiu7RVHecrlC83n5UXLhEl-LcQTFC5wQI6Ghv002JXF~mkNY-nwVpfiftcPoLAYoLJf6Z5kn4EYV8YQdBhfv1ltGcNzyCtQipGyu7FP0H~cjHscnwiovCWzTPizFoQwHz5QKR-8rtOt8th-OWDsg_&Key-Pair-Id=APKAJLTNE6QMUY6HBC5A)
+
+
+* * *
+
+## Part 2: Research question
+ <!-- (3 points) Come up with a research question that you want to answer using these data. You should phrase your research question in a way that matches up with the scope of inference your dataset allows for. You are welcomed to create new variables based on existing ones. Along with your research question include a brief discussion (1-2 sentences) as to why this question is of interest to you and/or your audience. -->
+
+Four questions in the dataset deal specifically with the causes behind African-Americans having worse jobs, income, and housing than White people:
+
+> On the average (negroes/Blacks/African-Americans) have worse jobs, income, and housing than White people. Do you think these differences are:
+>
+> a. (RACDIF1) Mainly due to discrimination?
+> b. (RACDIF2) Because most have less in-born ability to learn?
+> c. (RACDIF3) Because most don't have the chance for education that it takes to rise out of poverty?
+> d. (RACDIF4) Because most just don't have the motivation or willpower to pull themselves up out of poverty?
+
+Questions a and c deal with whether the respondent sees systemic racism causing these outcomes.  Questions b and d reveal whether the respondent sees the qualities of the Black individual causing these outcomes--a classically racist point of view.  
+
+The respondent's own race is available to us in the dataset. 
+
+We will examine the understanding of classical racism versus the respondent's own race. 
+We may be able to examine the understanding of systemic racism versus the respondent's own race.
+
+We can form 2 clear research questions:
+
+1. Are Blacks and Whites equally aware of systemic racism and how it affects Blacks economic outcomes?  We can put this in terms of wokeness: Are the races equally woke?
+
+ * Our null hypothesis is that they are equally woke: $H_0: \mu_{wokeW} = \mu_{wokeB}$
+ * Our alternative hypothesis is that Blacks are more woke: $H_A: \mu_{wokeB} \gt \mu_{wokeW}$ 
+
+2. Are White people and Black people equally classically racist?  
+
+ * Our null hypothesis is Whites and Blacks are equally racist: $H_0: \mu_{racistW} = \mu_{racistB}$; 
+ * Our alternative hypothesis is that Whites are more racist than Blacks: $H_A: \mu_{racistW} \gt \mu_{racistB}$ 
+
+If we actually find that White people are more racist than Black people, we will have some idea of the quantity which the racism exists in the culture. 
+
+The survey has four questions regarding rationales for poorer economic outcomes for Black people: systemic discrimination, systemically poor education, innate inability to learn, and innate lack of motivation.  We should be able to learn how these correlate to the respondent's own race.
+
+We will only be able to assess correlation, not causation, between a respondent's race and their attitudes towards the causes of African-Americans having worse jobs, income, and housing than White people.
+
+An important aspect to understanding the wave of recent Black Lives Matter type protests is to realize the extent that systematic racism plays in the legacy of the United States' oppression of Black people.  Understanding the source of racism as systemic expands the scope of remedies beyond the  call to eliminate "a few bad racist apples," and forces a reevaluation of the system's underlying assumptions.
+
+The more thoroughly racism is understood as systemic, the more effective the remedies will be, therefore it is important to investigate to what extent racism is understood to be systemic vs. based on an individual's assumptions of innate abilities. 
+
+These questions were asked in every survey from 1972 to 2012.  We will not attempt to ascertain the trends over time.
+
+### Note: 
+In this project, we will refer to the racial groups as Black and White, with the initial letter capitalized. This is a change that was recently instituted by the Washington Post, and we will support their rationale.  As the Editors [wrote on July 29, 2020](https://www.washingtonpost.com/pr/2020/07/29/washington-post-announces-writing-style-changes-racial-ethnic-identifiers/): 
+
+> The Washington Post will uppercase the B in Black to identify the many groups that make up the African diaspora in America and elsewhere.... The use of [capitalized] Black is a recognition and acknowledgment not only of the cultural bonds and historical experiences shared by people of African heritage, but also the shared struggles of the descendants of enslaved people, families who immigrated generations ago and more recent immigrants from Africa, the Caribbean and other corners of the world.  This style change also prompts the question of how America’s largest racial community should be identified. Stories involving race show that White also represents a distinct cultural identity in the United States...  As such, White should be represented with a capital W.
+
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+<!-- (10 points) Perform exploratory data analysis (EDA) that addresses the research question you outlined above. Your EDA should contain numerical summaries and visualizations. Each R output and plot should be accompanied by a brief interpretation. -->
+
+<!-- NOTE: Insert code chunks as needed by clicking on the "Insert a new code chunk"  -->
+<!-- button (green button with orange arrow) above. Make sure that your code is visible -->
+<!-- in the project you submit. Delete this note when before you submit your work. -->
+
+We find that all respondents provided answers about their own race, but not all answered all 4 RACDIF questions.  Let's reduce the overall data to just those who answered all 4 RACDIF questions.
+
+```{r}
+gss %>%  filter(racdif1 != 'NA') %>% count()
+```
+24,086 people answered the question concerning discrimination
+```{r}
+gss %>%  filter(racdif2 != 'NA') %>% count()
+```
+24,421 answered the question concerning inability to learn.
+```{r}
+gss %>%  filter(racdif3 != 'NA') %>% count()
+```
+24,459 people answered the question concerning educational opportunities.
+```{r}
+gss %>%  filter(racdif4 != 'NA') %>% count()
+```
+23,827 people answered the question concerning motivation or willpower.
+
+```{r}
+gss %>%  filter(race == 'NA') %>% count()
+```
+Every person answered the person about their own race.
+```{r}
+gss %>%  filter(race == 'White') %>% count()
+```
+A total of 46,350 White people were surveyed over the years.
+```{r}
+gss %>%  filter(race == 'Black') %>% count()
+```
+7,926 Black people were surveyed over the years.
+```{r}
+gss %>%  filter(race == 'Other') %>% count()
+```
+2,785 people identified their race as 'Other,' neither Black nor White.
+Our survey is made up of 46,350 Whites, 7,926 Blacks, and 2,785 people who classify their race as Other.  We will only retain Black and White people.  We will also filter out anyone who didn't answer all four RACDIF questions, leaving us with a group of 21,047 people: 2899 Black and 18148 White.
+
+```{r}
+ra <- gss %>%
+  filter(racdif1 != 'NA' & racdif2 != 'NA' & racdif3 != 'NA' & racdif4 != 'NA' & (race=='White' | race=='Black' )) 
+ra %>% count()
+
+```
+After filtering out the people who answered NA to one of our questions or interest and removing people who responded 'Other' to race, we are left with 21,047 observations.
+
+Here's a summary  of our data so far.
+
+
+```{r}
+sra <- ra %>% select (race, racdif1, racdif2, racdif3, racdif4) 
+summary(sra)
+```
+
+This gives us every combination of yes's and no's.
+Remove the "Other" from the race factor.
+```{r}
+sra <- sra %>%
+  mutate (race = factor(race, levels = c("White", "Black")))
+str(sra)  
+```
+
+```{r}
+rt <- sra  %>% 
+  group_by(race) %>% count(racdif1 ,racdif2, racdif3, racdif4) %>%
+  transmute(n=n, system_discrimination= racdif1, racist_inability=racdif2, system_education= racdif3, racist_unmotivated=racdif4,  )
+rt
+```
+
+
+Let's plot what we have so far:
+
+```{r}
+p1 <- ggplot(data = sra, aes(fill=factor(racdif1, levels=c("No", "Yes")), x=race, )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="Due to discrimination") + ylab(label="Fraction")
+p1 + labs(fill ="Due to discrimination")
+```
+
+```{r}
+sra  %>%
+  group_by(race, racdif1) %>%
+  summarise (n = n()) %>%
+  transmute('Due to Discrimation'= racdif1,'Racial Proportion' = n / sum(n), n = n)
+```
+This histogram makes it clear that Blacks see discrimination in their environment as a cause 66.8% of the time, vs. Whites seeing discrimination 35.0% of the time.
+
+```{r}
+p2 <- ggplot(data = sra, aes(fill=factor(racdif2, levels=c("No", "Yes")), x=race, )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="Due to inability to learn") + ylab(label="Fraction")
+p2 + labs(fill ="Due to inability to learn")
+
+```
+```{r}
+sra  %>%
+  group_by(race, racdif2) %>%
+  summarise (n = n()) %>%
+  transmute('Due to inability'= racdif2,'Racial Proportion' = n / sum(n), n = n)
+```
+Whites view a cause of Black economic inequality as the inability to learn 14.5% of the time vs. Blacks seeing this as a cause 12.9% of the time. 
+
+```{r}
+p3 <- ggplot(data = sra, aes(fill=factor(racdif3, levels=c("No", "Yes")), x=race )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="No chance for education") + ylab(label="Fraction")
+p3 + labs(fill ="No chance for education")
+```
+```{r}
+sra  %>%
+  group_by(race, racdif3) %>%
+  summarise (n = n()) %>%
+  transmute('Due to lack of Educational Chances'= racdif3,'Racial Proportion' = n / sum(n), n = n)
+```
+Whites view a cause of Black economic inequality as due to a lack of educational chances 47.6% of the time vs. Blacks identify this as a cause 58.3% of the time.
+
+
+```{r}
+p4 <- ggplot(data = sra, aes(fill=factor(racdif4, levels=c("No", "Yes")), x=race )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="Not motivated") + ylab(label="Fraction")
+p4 + labs(fill ="Not motivated")
+```
+```{r}
+sra  %>%
+  group_by(race, racdif4) %>%
+  summarise (n = n()) %>%
+  transmute('Due to lack of motivation'= racdif4,'Racial Proportion' = n / sum(n), n = n)
+```
+Whites view a cause of Black economic inequality as due to a lack of motivation or willpower 47.6% of the time vs. Blacks identify this as a cause 40.4% of the time.
+
+* * *
+
+## Part 4: Inference
+
+Because the survey was done on a random sample of respondents, no causality can be inferred from the results.
+
+<!-- (28 points) Perform inference that addresses the research question you outlined above. Each R output and plot should be accompanied by a brief interpretation. -->
+
+<!-- NOTE: Insert code chunks as needed by clicking on the "Insert a new code chunk"  -->
+<!-- button (green button with orange arrow) above. Make sure that your code is visible -->
+<!-- in the project you submit. Delete this note when before you submit your work. -->
+### Perception of Discrimination
+
+The question about discrimination is coded as racdif1 in the survey, which I have abbreviated as rd1 below.
+
+```{r}
+p1 <- ggplot(data = sra, aes(fill=factor(racdif1, levels=c("No", "Yes")), x=race, )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="Due to discrimination") + ylab(label="Fraction")
+p1 + labs(fill ="Due to discrimination")
+```
+
+#### Hypothesis test: Is this due to chance? 
+
+ * Our null hypothesis is Whites and Blacks perceive discrimination equally: $H_0: p_{rd1W} = p_{rd1B}$
+ * Our alternative hypothesis is that Blacks perceive discrimination impacting their economic opportunities to a greater extent than Whites: $H_A: p_{rd1B} \gt p_{rd1W}$ 
+
+To check the success-failure condition of a hypothesis test, we use the pooled proportion, and the values found in our exploratory data analysis section above.
+```{r}
+phat_rd1 <- (6363 + 1938) / (18148+2899)
+phat_rd1_w <- phat_rd1 * 18148
+phat_rd1_wn <- (1-phat_rd1) * 18148
+phat_rd1_b <- phat_rd1 * 6363
+phat_rd1_bn <- (1-phat_rd1) * 6363
+cat ("Pooled proportion: ", round(phat_rd1, 4)," Success failure test of all groups (must be > 10): ", round(phat_rd1_w, 4), 
+     " ",round(phat_rd1_wn, 4), " ", round(phat_rd1_b, 4), " ", round(phat_rd1_b, 4), " ", round(phat_rd1_bn, 4))
+```
+we meet the conditions for the sampling distribution of $\hat{p}_1 - \hat{p}_2$ to be normal:
+
+* The sample is independently drawn (random sampling without replacement).
+* The sample is less than 10% of the population.
+* We have 10 or more successes and failures in each group.
+
+Calculate the point estimate of the difference in Black vs. White success rates, and use the pooled proportion phar_rd1 to calculate the standard error.
+```{r}
+pt_est_racdif1  <-(1938/2899) -(6363/18148)
+```
+Calculate the standard error using the pooled proportion:
+```{r}
+se_racdif1 <- sqrt(phat_rd1 * (1 - phat_rd1) * (1/ 18148  + 1/2899))
+```
+Calculate the pvalue using the point estimate and the standard error:
+```{r}
+zval <- (pt_est_racdif1 - 0)/se_racdif1
+```
+
+The inference function does all the same work and results in the same z-value.  Our p_value is less than .0001.  Because this is less than .05, we reject the null hypothesis.  The difference in proportions is not explained by chance. 
+
+```{r}
+inference(y = racdif1, x = race, data = sra, statistic = "proportion", type = "ht", success='Yes', order=c("Yes", "No"),
+          method = "theoretical", alternative='greater', null=0, show_eda_plot=FALSE)
+```
+
+#### Confidence Interval for perception of discrimination
+
+```{r inf-racdif1, tidy=FALSE}
+inference(y = racdif1, x = race, data = sra, statistic = "proportion", type = "ci", success='Yes', order=c("No", "Yes"),
+           method = "theoretical", show_eda_plot = FALSE )
+```
+We are 95% confident that the *difference* between Blacks and Whites considering discrimination to be a factor in Blacks' having worse jobs, income, and housing than White people is 31.79% +/- 1.85% (29.94%, 33.64%).  
+
+This is quite a striking difference in opinion, as it indicates that approximately two-thirds of Blacks identify systemic racism of a discriminatory type to be a factor in their plight, but only approximately one-third of Whites do.
+
+### Perception of reduced educational opportunities
+
+Let's look at another type of systemic racism: fewer educational opportunities.
+
+The question about educational opportunities is coded as racdif3 in the survey, I used rd3.
+
+#### Hypothesis test: Is the observed difference explained by chance? 
+
+ * Our null hypothesis is Whites and Blacks perceive equal educational opportunities: $H_0: p_{rd3W} = p_{rd3B}$
+ * Our alternative hypothesis is that Blacks fewer educational opportunities impacting their economic outcomes to a greater extent than Whites: $H_A: p_{rd3B} \gt p_{rd3W}$ 
+
+To check the success-failure condition of a hypothesis test, we use the pooled proportion, and the values found in our exploratory data analysis section above.
+```{r}
+phat_rd3 <- (1691 + 8641) / (18148+2899)
+phat_rd3_w <- phat_rd3 * 18148
+phat_rd3_wn <- (1-phat_rd3) * 18148
+phat_rd3_b <- phat_rd3 * 6363
+phat_rd3_bn <- (1-phat_rd3) * 6363
+cat ("Pooled proportion: ", round(phat_rd3, 4)," Success failure test of all groups (must be > 10): ", round(phat_rd3_w, 4), 
+     " ",round(phat_rd3_wn, 4), " ", round(phat_rd3_b, 4), " ", round(phat_rd3_b, 4), " ", round(phat_rd3_bn, 4))
+```
+We meet the conditions for the sampling distribution of $\hat{p}_1 - \hat{p}_2$ to be normal:
+
+* The sample is independently drawn (random sampling without replacement).
+* The sample is less than 10% of the population.
+* We have 10 or more successes and failures in each group.
+
+```{r}
+inference(y = racdif3, x = race, data = sra, statistic = "proportion", type = "ht", success='Yes', order=c("Yes", "No"),
+          method = "theoretical", alternative='twosided', null=0, show_eda_plot=FALSE)
+```
+Our p_value is less than .0001.  Because this is less than .05, we reject the null hypothesis.  The difference in proportions is not explained by chance. 
+
+#### Confidence Interval for difference of perception of educational opportunities.
+```{r}
+p3 <- ggplot(data = sra, aes(fill=factor(racdif3, levels=c("No", "Yes")), x=race )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="No chance for education") + ylab(label="Fraction")
+p3 + labs(fill ="No chance for education")
+```
+```{r inf-racdif3, tidy=FALSE}
+inference(y = racdif3, x = race, data = sra, statistic = "proportion", type = "ci", success='Yes', order=c("No", "Yes"),
+           method = "theoretical", show_eda_plot = FALSE )
+```
+
+We are 95% confident that the *difference* between Blacks and Whites considering poorer educational opportunities to be a factor in Blacks' having worse jobs, income, and housing than White people is 10.72% +/- 1.93% (8.78%, 12.65%). 
+
+Even here, more than half of Blacks see this type of systemic racism as a factor in their economic outcomes, whereas less than half of Whites do.
+
+For both of our tests of wokeness, we rejected the null hypotheses, and find that there is statistically significant evidence that regarding awareness of discrimination and unequal educational opportunities, Black people are more woke than White people. $H_A: \mu_{wokeB} \gt \mu_{wokeW}$ 
+
+### Perception of inability to learn
+
+Now, let's look at the two questions that deal with racist attitudes on the part of the respondent. The question about educational opportunities is coded as racdif2 in the survey.
+
+#### Hypothesis test: Is the observed difference explained by chance? 
+
+  * Our null hypothesis is Whites and Blacks perceive discrimination equally: $H_0: p_{rd2W} = p_{rd2B}$
+ * Our alternative hypothesis is that Blacks perceive discrimination impacting their economic opportunities to a greater extent than Whites: $H_A: p_{rd2B} \gt p_{rd2W}$ 
+ 
+To check the success-failure condition of a hypothesis test, we use the pooled proportion, and the values found in our exploratory data analysis section above.
+```{r}
+phat_rd2 <- (1691 + 8641) / (18148+2899)
+phat_rd2_w <- phat_rd2 * 18148
+phat_rd2_wn <- (1-phat_rd2) * 18148
+phat_rd2_b <- phat_rd2 * 6363
+phat_rd2_bn <- (1-phat_rd2) * 6363
+cat ("Pooled proportion: ", round(phat_rd2, 4)," Success failure test of all groups (must be > 10): ", round(phat_rd2_w, 4), 
+     " ",round(phat_rd2_wn, 4), " ", round(phat_rd2_b, 4), " ", round(phat_rd2_b, 4), " ", round(phat_rd2_bn, 4))
+```
+We meet the conditions for the sampling distribution of $\hat{p}_1 - \hat{p}_2$ to be normal:
+
+* The sample is independently drawn (random sampling without replacement).
+* The sample is less than 10% of the population.
+* We have 10 or more successes and failures in each group.
+
+```{r}
+inference(y = racdif2, x = race, data = sra, statistic = "proportion", type = "ht", success='Yes', order=c("Yes", "No"),
+          method = "theoretical", alternative='twosided', null=0, show_eda_plot=FALSE)
+```
+
+Our p_value is .0272.  Because this is less than .05, we reject the null hypothesis.  The difference in proportions is not explained by chance. 
+
+#### Confidence interval about perception of inability to learn
+
+```{r}
+p2 <- ggplot(data = sra, aes(fill=factor(racdif2, levels=c("No", "Yes")), x=race, )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="Due to inability to learn") + ylab(label="Fraction")
+p2 + labs(fill ="Due to inability to learn")
+```
+```{r inf-racdif2, tidy=FALSE}
+inference(y = racdif2, x = race, data = sra, statistic = "proportion", type = "ci", success='Yes', order=c("Yes", "No"),
+           method = "theoretical", show_eda_plot = FALSE )
+```
+Here, Whites are more likely than Blacks to identify Blacks' inability to learn as a cause of poorer economic outcomes.  We are 95% confident that the *difference* between Blacks and Whites is 1.54% +/- 1.33% (0.21%, 2.87%). Approximately 14.48% of Whites identify inability to learn as a cause, and 12.94% of Blacks, a difference of 1.54%.  Our lower value of 0.21% comes very close to zero at the lower end of the range, but because it does not reach 0, we can see we were justified in rejecting the null hypothesis.
+
+### Perception of lack of motivation
+The final question concerned poor economic outcomes due to Blacks' lack of motivation, racdif4/rd4.
+
+#### Hypothesis test: Is the observed difference explained by chance? 
+
+* Our null hypothesis is Whites and Blacks perceive lack of motivation equally: $H_0: p_{rd4W} = p_{rd4B}$ 
+* Our alternative hypothesis is that Blacks perceive discrimination impacting their economic opportunities to a greater extent than Whites: $H_A: p_{rd4B} \gt p_{rd4W}$  
+ 
+To check the success-failure condition of a hypothesis test, we use the pooled proportion, and the values found in our exploratory data analysis section above.
+```{r}
+phat_rd4 <- (10042 + 1173) / (18148+2899)
+phat_rd4_w <- phat_rd4 * 18148
+phat_rd4_wn <- (1-phat_rd4) * 18148
+phat_rd4_b <- phat_rd4 * 6363
+phat_rd4_bn <- (1-phat_rd4) * 6363
+cat ("Pooled proportion: ", round(phat_rd4, 4)," Success failure test of all groups (must be > 10): ", round(phat_rd4_w, 4), 
+     " ",round(phat_rd4_wn, 4), " ", round(phat_rd4_b, 4), " ", round(phat_rd4_b, 4), " ", round(phat_rd4_bn, 4))
+```
+We meet the conditions for the sampling distribution of $\hat{p}_1 - \hat{p}_2$ to be normal:
+
+* The sample is independently drawn (random sampling without replacement).
+* The sample is less than 10% of the population.
+* We have 10 or more successes and failures in each group.
+
+```{r}
+inference(y = racdif4, x = race, data = sra, statistic = "proportion", type = "ht", success='Yes', order=c("Yes", "No"),
+          method = "theoretical", alternative='twosided', null=0, show_eda_plot=FALSE)
+```
+Our p_value is .0001.  Because this is less than .05, we reject the null hypothesis.  The difference in proportions is not explained by chance. 
+```{r}
+p4 <- ggplot(data = sra, aes(fill=factor(racdif4, levels=c("No", "Yes")), x=race )) +
+  geom_bar(position='fill', stat='count') +
+  xlab(label="Not motivated") + ylab(label="Fraction")
+p4 + labs(fill ="Not motivated")
+```
+
+```{r inf-racdif4, tidy=FALSE}
+inference(y = racdif4, x = race, data = sra, statistic = "proportion", type = "ci", success='Yes', order=c("Yes", "No"),
+           method = "theoretical", show_eda_plot = FALSE )
+```
+
+Here, Whites are more likely than Blacks to identify Blacks' lack of motivation as a cause of poorer economic outcomes.  We are 95% confident that the *difference* between Blacks and Whites is 14.87% +/- 1.93% (12.94%, 16.8%).
+
+For both of our tests of classic racism, our confidence intervals do not include the possibility that Black - White = 0, so we reject the null hypothesis regarding classic racism and find support for the alternative hypothesis: Whites are more racist than Blacks.
